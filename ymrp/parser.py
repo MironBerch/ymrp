@@ -1,10 +1,10 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from playwright.sync_api import Locator, Page, sync_playwright
 
-from .constants import (
+from .constants import (  # noqa: WPS300
     BIG_TIMEOUT,
     MEDIUM_TIMEOUT,
     REVIEW,
@@ -29,7 +29,7 @@ class YandexMapReviewsHtmlCodeParser:
 
     def parse_yandex_review(
         self,
-        review: BeautifulSoup,
+        review: Tag,
     ) -> dict[str, Any]:
         review_data = {}
 
@@ -38,8 +38,7 @@ class YandexMapReviewsHtmlCodeParser:
             review_data['name'] = name.text.strip()
 
         rating = review.find('meta', itemprop='ratingValue')
-        if rating:
-            review_data['rating'] = int(float(rating['content']))
+        review_data['rating'] = int(float(rating['content']))  # type: ignore
 
         review_text = review.find(
             'span',
@@ -69,7 +68,8 @@ class YandexMapReviewsHtmlCodeParser:
         reviews: list[dict[str, Any]] = []
         for review in review_cards:
             try:
-                reviews.append(self.parse_yandex_review(review))
+                if isinstance(review, Tag):
+                    reviews.append(self.parse_yandex_review(review))
             except Exception:
                 ...
         return reviews
@@ -128,7 +128,7 @@ class YandexMapReviewsParser:
     def _click_on_element(
         self,
         element: Locator,
-        button: str = 'left',
+        button: Literal['left', 'middle', 'right'] = 'left',
         timeout: int = VERY_SMALL_TIMEOUT,
     ) -> bool:
         try:
