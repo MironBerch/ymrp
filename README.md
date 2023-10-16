@@ -25,7 +25,7 @@ playwright install-deps
 ## Example
 
 ```python
-from ymrp import Parser
+from ymrp.parser import Parser
 
 p = Parser()
 reviews = p.get_yandex_reviews()
