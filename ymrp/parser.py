@@ -7,12 +7,12 @@ from playwright.sync_api import Locator, Page, sync_playwright
 from .constants import (
     BIG_TIMEOUT,
     MEDIUM_TIMEOUT,
-    MONTHS,
     REVIEW,
     REVIEW_VIEW_EXPAND,
     REVIEWS_CONTAINER,
     SMALL_TIMEOUT,
     VERY_SMALL_TIMEOUT,
+    months,
 )
 
 
@@ -24,7 +24,7 @@ class YandexMapReviewsHtmlCodeParser:
         else:
             day, month_name = parts
             year = str(datetime.now().year)
-        month = MONTHS.get(month_name, '01')
+        month = months.get(month_name, '01')
         return f'{year}-{month}-{day.zfill(2)}'
 
     def parse_yandex_review(
