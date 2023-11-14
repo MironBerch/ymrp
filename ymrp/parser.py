@@ -4,20 +4,7 @@ from typing import Any
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 
-MONTHS = {
-    'января': '01',
-    'февраля': '02',
-    'марта': '03',
-    'апреля': '04',
-    'мая': '05',
-    'июня': '06',
-    'июля': '07',
-    'августа': '08',
-    'сентября': '09',
-    'октября': '10',
-    'ноября': '11',
-    'декабря': '12',
-}
+from .constants import BIG_TIMEOUT, MEDIUM_TIMEOUT, MONTHS, SMALL_TIMEOUT
 
 
 class Parser:
@@ -27,7 +14,7 @@ class Parser:
             page = browser.new_page()
             page.goto(url)
 
-            page.wait_for_timeout(15000)
+            page.wait_for_timeout(BIG_TIMEOUT)
 
             reviews_container = page.locator(
                 '.business-reviews-card-view__reviews-container'
@@ -38,7 +25,7 @@ class Parser:
             prev_review_count, review_count = 0, 0
 
             while True:
-                page.wait_for_timeout(10000)
+                page.wait_for_timeout(MEDIUM_TIMEOUT)
 
                 last_review = page.locator(
                     '.business-reviews-card-view__review'
@@ -63,13 +50,13 @@ class Parser:
                 ).all()
                 for button in more_buttons:
                     try:
-                        page.wait_for_timeout(2000)
-                        button.click(button='left', timeout=2000)
+                        page.wait_for_timeout(SMALL_TIMEOUT)
+                        button.click(button='left', timeout=SMALL_TIMEOUT)
                     except Exception:
                         pass
                 iterations += 1
 
-            page.wait_for_timeout(2000)
+            page.wait_for_timeout(SMALL_TIMEOUT)
 
             reviews_container = page.locator(
                 '.business-reviews-card-view__reviews-container'
