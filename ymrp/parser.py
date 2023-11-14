@@ -98,7 +98,7 @@ class Parser:
 
         rating = review.find('meta', itemprop='ratingValue')
         if rating:
-            review_data['rating'] = rating['content']
+            review_data['rating'] = int(float(rating['content']))
 
         review_text = review.find(
             'span',
