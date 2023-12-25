@@ -132,3 +132,8 @@ class Parser:
             except Exception:
                 pass
         return reviews
+
+    def get_yandex_reviews(self, url: str) -> list[dict[str, Any]]:
+        return self.parse_yandex_reviews(
+            html_content=self.get_reviews_html_content(url)
+        )
