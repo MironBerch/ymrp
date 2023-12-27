@@ -115,3 +115,20 @@ class Parser:
             review_data['date'] = self.convert_date(date.text.strip())
 
         return review_data
+
+    def parse_yandex_reviews(
+        self,
+        html_content: str = '',
+    ) -> list[dict[str, Any]]:
+        soup = BeautifulSoup(html_content, 'html.parser')
+        review_cards = soup.find_all(
+            'div',
+            class_='business-reviews-card-view__review',
+        )
+        reviews: list[dict[str, Any]] = []
+        for review in review_cards:
+            try:
+                reviews.append(self.parse_yandex_review(review))
+            except Exception:
+                pass
+        return reviews
