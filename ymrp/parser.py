@@ -1,5 +1,7 @@
 from datetime import datetime
+from typing import Any
 
+from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 
 MONTHS = {
@@ -83,3 +85,33 @@ class Parser:
             year = str(datetime.now().year)
         month = MONTHS.get(month_name, '01')
         return f'{year}-{month}-{day.zfill(2)}'
+
+    def parse_yandex_review(
+        self,
+        review: BeautifulSoup,
+    ) -> dict[str, Any]:
+        review_data = {}
+
+        name = review.find('span', itemprop='name')
+        if name:
+            review_data['name'] = name.text.strip()
+
+        rating = review.find('meta', itemprop='ratingValue')
+        if rating:
+            review_data['rating'] = rating['content']
+
+        review_text = review.find(
+            'span',
+            class_='spoiler-view__text-container',
+        )
+        if review_text:
+            review_data['text'] = review_text.text.strip()
+
+        date = review.find(
+            'span',
+            class_='business-review-view__date',
+        )
+        if date:
+            review_data['date'] = self.convert_date(date.text.strip())
+
+        return review_data
