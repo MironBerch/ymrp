@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from playwright.sync_api import sync_playwright
 
 MONTHS = {
@@ -71,3 +73,13 @@ class Parser:
                 '.business-reviews-card-view__reviews-container'
             )
             return reviews_container.inner_html()
+
+    def convert_date(self, date_str: str) -> str:
+        parts = date_str.split()
+        if len(parts) == 3:
+            day, month_name, year = parts
+        else:
+            day, month_name = parts
+            year = str(datetime.now().year)
+        month = MONTHS.get(month_name, '01')
+        return f'{year}-{month}-{day.zfill(2)}'
