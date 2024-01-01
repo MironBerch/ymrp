@@ -1,1 +1,1 @@
-# yc-map-reviews-parser
+# ymrp
