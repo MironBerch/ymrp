@@ -1,0 +1,7 @@
+[project]
+name = "yc-map-reviews-parser"
+version = "0.1.0"
+description = "Yandex map reviews parser"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
