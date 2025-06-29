@@ -4,7 +4,15 @@ from typing import Any
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 
-from .constants import BIG_TIMEOUT, MEDIUM_TIMEOUT, MONTHS, SMALL_TIMEOUT
+from .constants import (
+    BIG_TIMEOUT,
+    MEDIUM_TIMEOUT,
+    MONTHS,
+    SMALL_TIMEOUT,
+    REVIEWS_CONTAINER,
+    REVIEW,
+    REVIEW_VIEW_EXPAND,
+)
 
 
 class Parser:
@@ -16,9 +24,7 @@ class Parser:
 
             page.wait_for_timeout(BIG_TIMEOUT)
 
-            reviews_container = page.locator(
-                '.business-reviews-card-view__reviews-container'
-            )
+            reviews_container = page.locator(REVIEWS_CONTAINER)
             reviews_container.click(button='left')
 
             last_review = None
@@ -27,9 +33,7 @@ class Parser:
             while True:
                 page.wait_for_timeout(MEDIUM_TIMEOUT)
 
-                last_review = page.locator(
-                    '.business-reviews-card-view__review'
-                )
+                last_review = page.locator(REVIEW)
                 review_count = last_review.count()
                 last_review = last_review.last
 
@@ -40,14 +44,10 @@ class Parser:
 
                 prev_review_count = review_count
 
-            more_buttons = page.locator(
-                '.business-review-view__expand[aria-hidden="false"]'
-            ).all()
+            more_buttons = page.locator(REVIEW_VIEW_EXPAND).all()
             iterations = 0
             while iterations < 10 or len(more_buttons) != 0:
-                more_buttons = page.locator(
-                    '.business-review-view__expand[aria-hidden="false"]'
-                ).all()
+                more_buttons = page.locator(REVIEW_VIEW_EXPAND).all()
                 for button in more_buttons:
                     try:
                         page.wait_for_timeout(SMALL_TIMEOUT)
@@ -58,9 +58,7 @@ class Parser:
 
             page.wait_for_timeout(SMALL_TIMEOUT)
 
-            reviews_container = page.locator(
-                '.business-reviews-card-view__reviews-container'
-            )
+            reviews_container = page.locator(REVIEWS_CONTAINER)
             return reviews_container.inner_html()
 
     def convert_date(self, date_str: str) -> str:
