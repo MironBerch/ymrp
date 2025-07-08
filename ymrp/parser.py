@@ -22,9 +22,9 @@ class Parser:
             page = browser.new_page()
             page.goto(url)
 
-            page.wait_for_timeout(BIG_TIMEOUT)
-
             reviews_container = page.locator(REVIEWS_CONTAINER)
+            page.wait_for_selector(REVIEWS_CONTAINER, timeout=BIG_TIMEOUT, state='visible')
+
             reviews_container.click(button='left')
 
             last_review = None
