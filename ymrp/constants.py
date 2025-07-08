@@ -15,9 +15,9 @@ MONTHS = {
 }
 
 # Time constants
-SMALL_TIMEOUT = 5_000  # 5 seconds
-MEDIUM_TIMEOUT = 10_000  # 10 seconds
-BIG_TIMEOUT = 15_000  # 15 seconds
+SMALL_TIMEOUT = 4_000  # 4 seconds
+MEDIUM_TIMEOUT = 8_000  # 8 seconds
+BIG_TIMEOUT = 12_000  # 12 seconds
 
 # Selector constants
 REVIEWS_CONTAINER = '.business-reviews-card-view__reviews-container'
