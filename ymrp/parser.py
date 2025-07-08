@@ -8,10 +8,11 @@ from .constants import (
     BIG_TIMEOUT,
     MEDIUM_TIMEOUT,
     MONTHS,
-    SMALL_TIMEOUT,
-    REVIEWS_CONTAINER,
     REVIEW,
     REVIEW_VIEW_EXPAND,
+    REVIEWS_CONTAINER,
+    SMALL_TIMEOUT,
+    VERY_SMALL_TIMEOUT,
 )
 
 
@@ -50,8 +51,7 @@ class Parser:
                 more_buttons = page.locator(REVIEW_VIEW_EXPAND).all()
                 for button in more_buttons:
                     try:
-                        page.wait_for_timeout(SMALL_TIMEOUT)
-                        button.click(button='left', timeout=SMALL_TIMEOUT)
+                        button.click(button='left', timeout=VERY_SMALL_TIMEOUT)
                     except Exception:
                         pass
                 iterations += 1

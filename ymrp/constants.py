@@ -15,6 +15,7 @@ MONTHS = {
 }
 
 # Time constants
+VERY_SMALL_TIMEOUT = 1_000  # 1 seconds
 SMALL_TIMEOUT = 4_000  # 4 seconds
 MEDIUM_TIMEOUT = 8_000  # 8 seconds
 BIG_TIMEOUT = 12_000  # 12 seconds
