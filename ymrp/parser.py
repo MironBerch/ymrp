@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 
 from bs4 import BeautifulSoup
-from playwright.sync_api import Locator, sync_playwright
+from playwright.sync_api import Locator, Page, sync_playwright
 
 from .constants import (
     BIG_TIMEOUT,
@@ -16,65 +16,7 @@ from .constants import (
 )
 
 
-class Parser:
-    def _click_on_element(
-        self,
-        element: Locator,
-        button: str = 'left',
-        timeout: int = VERY_SMALL_TIMEOUT,
-    ) -> bool:
-        try:
-            element.click(button=button, timeout=timeout)
-        except Exception:
-            return False
-        else:
-            return True
-
-    def get_reviews_html_content(self, url: str) -> str:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
-            page.goto(url)
-
-            reviews_container = page.locator(REVIEWS_CONTAINER)
-            page.wait_for_selector(
-                REVIEWS_CONTAINER,
-                timeout=BIG_TIMEOUT,
-                state='visible',
-            )
-
-            self._click_on_element(reviews_container)
-
-            last_review = None
-            prev_review_count, review_count = 0, 0
-
-            while True:
-                page.wait_for_timeout(MEDIUM_TIMEOUT)
-
-                last_review = page.locator(REVIEW)
-                review_count = last_review.count()
-                last_review = last_review.last
-
-                self._click_on_element(last_review)
-
-                if prev_review_count == review_count:
-                    break
-
-                prev_review_count = review_count
-
-            more_buttons = page.locator(REVIEW_VIEW_EXPAND).all()
-            iterations = 0
-            while iterations < 10 or len(more_buttons) != 0:
-                more_buttons = page.locator(REVIEW_VIEW_EXPAND).all()
-                for button in more_buttons:
-                    self._click_on_element(button)
-                iterations += 1
-
-            page.wait_for_timeout(SMALL_TIMEOUT)
-
-            reviews_container = page.locator(REVIEWS_CONTAINER)
-            return reviews_container.inner_html()
-
+class YandexMapReviewsHtmlCodeParser:
     def convert_date(self, date_str: str) -> str:
         parts = date_str.split()
         if len(parts) == 3:
@@ -132,7 +74,77 @@ class Parser:
                 ...
         return reviews
 
+
+class YandexMapReviewsParser:
+    def get_reviews_html_content(self, url: str) -> str:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(headless=True)
+            page = browser.new_page()
+            page.goto(url)
+
+            reviews_container = page.locator(REVIEWS_CONTAINER)
+            page.wait_for_selector(
+                REVIEWS_CONTAINER,
+                timeout=BIG_TIMEOUT,
+                state='visible',
+            )
+
+            self._click_on_element(reviews_container)
+            self._view_all_reviews(page)
+            self._expand_all_reviews(page)
+
+            page.wait_for_timeout(SMALL_TIMEOUT)
+
+            reviews_container = page.locator(REVIEWS_CONTAINER)
+            return reviews_container.inner_html()
+
+    def _view_all_reviews(self, page: Page) -> None:
+        last_review = None
+        prev_review_count, review_count = 0, 0
+
+        while True:
+            page.wait_for_timeout(MEDIUM_TIMEOUT)
+
+            last_review = page.locator(REVIEW)
+            review_count = last_review.count()
+            last_review = last_review.last
+
+            self._click_on_element(last_review)
+
+            if prev_review_count == review_count:
+                break
+
+            prev_review_count = review_count
+
+    def _expand_all_reviews(self, page: Page) -> None:
+        more_buttons = page.locator(REVIEW_VIEW_EXPAND).all()
+        iterations = 0
+        while iterations < 10 or len(more_buttons) != 0:
+            more_buttons = page.locator(REVIEW_VIEW_EXPAND).all()
+            for button in more_buttons:
+                self._click_on_element(button)
+            iterations += 1
+
+    def _click_on_element(
+        self,
+        element: Locator,
+        button: str = 'left',
+        timeout: int = VERY_SMALL_TIMEOUT,
+    ) -> bool:
+        try:
+            element.click(button=button, timeout=timeout)
+        except Exception:
+            return False
+        else:
+            return True
+
+
+class Parser:
+    def __init__(self) -> None:
+        self.ymrhcp = YandexMapReviewsHtmlCodeParser()
+        self.ymrp = YandexMapReviewsParser()
+
     def get_yandex_reviews(self, url: str) -> list[dict[str, Any]]:
-        return self.parse_yandex_reviews(
-            html_content=self.get_reviews_html_content(url)
+        return self.ymrhcp.parse_yandex_reviews(
+            html_content=self.ymrp.get_reviews_html_content(url)
         )
