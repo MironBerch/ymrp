@@ -20,6 +20,7 @@ dev = [
     "isort>=6.0.1",
     "mypy>=1.16.1",
     "twine>=6.1.0",
+    "wemake-python-styleguide>=1.2.0",
 ]
 
 [tool.flake8]

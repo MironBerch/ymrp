@@ -3,6 +3,15 @@ revision = 1
 requires-python = ">=3.12"
 
 [[package]]
+name = "attrs"
+version = "25.3.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/5a/b0/1367933a8532ee6ff8d63537de4f1177af4bff9f3e829baf7331f595bb24/attrs-25.3.0.tar.gz", hash = "sha256:75d7cefc7fb576747b2c81b4442d4d4a1ce0900973527c011d1030fd3bf4af1b", size = 812032 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/77/06/bb80f5f86020c4551da315d78b3ab75e8228f89f0162f2c3a819e407941a/attrs-25.3.0-py3-none-any.whl", hash = "sha256:427318ce031701fea540783410126f03899a97ffc6f61596ad581ac2e40e3bc3", size = 63815 },
+]
+
+[[package]]
 name = "beautifulsoup4"
 version = "4.13.4"
 source = { registry = "https://pypi.org/simple" }
@@ -635,6 +644,20 @@ wheels = [
 ]
 
 [[package]]
+name = "wemake-python-styleguide"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "attrs" },
+    { name = "flake8" },
+    { name = "pygments" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/67/76/d8155fcfc8dd8e54d12da1b4505ad6cbd0bf65fd98bc5abecf64ab5f1e29/wemake_python_styleguide-1.2.0.tar.gz", hash = "sha256:85a662a9ca8f85ca731924fcac6029ee7ab169bc52160235c6ddd46d9e59797a", size = 156916 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4c/97/aafd60d86390eaeb2013d342a039899e29e6b57927085908d11ba166e5e4/wemake_python_styleguide-1.2.0-py3-none-any.whl", hash = "sha256:38880161cd5d4101ba120aa34e26f4028a536b37729cffe2e3103f7ffe10207b", size = 219143 },
+]
+
+[[package]]
 name = "ymrp"
 version = "0.3.0"
 source = { virtual = "." }
@@ -650,6 +673,7 @@ dev = [
     { name = "isort" },
     { name = "mypy" },
     { name = "twine" },
+    { name = "wemake-python-styleguide" },
 ]
 
 [package.metadata]
@@ -665,4 +689,5 @@ dev = [
     { name = "isort", specifier = ">=6.0.1" },
     { name = "mypy", specifier = ">=1.16.1" },
     { name = "twine", specifier = ">=6.1.0" },
+    { name = "wemake-python-styleguide", specifier = ">=1.2.0" },
 ]
