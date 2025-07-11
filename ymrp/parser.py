@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 
 from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import Locator, sync_playwright
 
 from .constants import (
     BIG_TIMEOUT,
@@ -17,6 +17,19 @@ from .constants import (
 
 
 class Parser:
+    def _click_on_element(
+        self,
+        element: Locator,
+        button: str = 'left',
+        timeout: int = VERY_SMALL_TIMEOUT,
+    ) -> bool:
+        try:
+            element.click(button=button, timeout=timeout)
+        except Exception:
+            return False
+        else:
+            return True
+
     def get_reviews_html_content(self, url: str) -> str:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
@@ -24,9 +37,13 @@ class Parser:
             page.goto(url)
 
             reviews_container = page.locator(REVIEWS_CONTAINER)
-            page.wait_for_selector(REVIEWS_CONTAINER, timeout=BIG_TIMEOUT, state='visible')
+            page.wait_for_selector(
+                REVIEWS_CONTAINER,
+                timeout=BIG_TIMEOUT,
+                state='visible',
+            )
 
-            reviews_container.click(button='left')
+            self._click_on_element(reviews_container)
 
             last_review = None
             prev_review_count, review_count = 0, 0
@@ -38,7 +55,7 @@ class Parser:
                 review_count = last_review.count()
                 last_review = last_review.last
 
-                last_review.click(button='left')
+                self._click_on_element(last_review)
 
                 if prev_review_count == review_count:
                     break
@@ -50,10 +67,7 @@ class Parser:
             while iterations < 10 or len(more_buttons) != 0:
                 more_buttons = page.locator(REVIEW_VIEW_EXPAND).all()
                 for button in more_buttons:
-                    try:
-                        button.click(button='left', timeout=VERY_SMALL_TIMEOUT)
-                    except Exception:
-                        pass
+                    self._click_on_element(button)
                 iterations += 1
 
             page.wait_for_timeout(SMALL_TIMEOUT)
@@ -115,7 +129,7 @@ class Parser:
             try:
                 reviews.append(self.parse_yandex_review(review))
             except Exception:
-                pass
+                ...
         return reviews
 
     def get_yandex_reviews(self, url: str) -> list[dict[str, Any]]:
