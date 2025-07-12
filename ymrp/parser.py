@@ -17,15 +17,23 @@ from .constants import (  # noqa: WPS300
 
 
 class YandexMapReviewsHtmlCodeParser:
-    def convert_date(self, date_str: str) -> str:
-        parts = date_str.split()
-        if len(parts) == 3:
-            day, month_name, year = parts
-        else:
-            day, month_name = parts
-            year = str(datetime.now().year)
-        month = months.get(month_name, '01')
-        return f'{year}-{month}-{day.zfill(2)}'
+    def parse_yandex_reviews(
+        self,
+        html_content: str = '',
+    ) -> list[dict[str, Any]]:
+        soup = BeautifulSoup(html_content, 'html.parser')
+        review_cards = soup.find_all(
+            'div',
+            class_='business-reviews-card-view__review',
+        )
+        reviews: list[dict[str, Any]] = []
+        for review in review_cards:
+            try:
+                if isinstance(review, Tag):
+                    reviews.append(self.parse_yandex_review(review))
+            except Exception:
+                ...
+        return reviews
 
     def parse_yandex_review(
         self,
@@ -56,23 +64,15 @@ class YandexMapReviewsHtmlCodeParser:
 
         return review_data
 
-    def parse_yandex_reviews(
-        self,
-        html_content: str = '',
-    ) -> list[dict[str, Any]]:
-        soup = BeautifulSoup(html_content, 'html.parser')
-        review_cards = soup.find_all(
-            'div',
-            class_='business-reviews-card-view__review',
-        )
-        reviews: list[dict[str, Any]] = []
-        for review in review_cards:
-            try:
-                if isinstance(review, Tag):
-                    reviews.append(self.parse_yandex_review(review))
-            except Exception:
-                ...
-        return reviews
+    def convert_date(self, date_str: str) -> str:
+        parts = date_str.split()
+        if len(parts) == 3:
+            day, month_name, year = parts
+        else:
+            day, month_name = parts
+            year = str(datetime.now().year)
+        month = months.get(month_name, '01')
+        return f'{year}-{month}-{day.zfill(2)}'
 
 
 class YandexMapReviewsParser:
