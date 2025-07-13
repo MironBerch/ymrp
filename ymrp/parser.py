@@ -39,32 +39,45 @@ class YandexMapReviewsHtmlCodeParser:
         self,
         review: Tag,
     ) -> dict[str, Any]:
-        review_data = {}
+        return {
+            'name': self._parse_review_name(review),
+            'rating': self._parse_review_rating(review),
+            'text': self._parse_review_text(review),
+            'date': self._parse_review_date(review),
+        }
 
+    def _parse_review_name(self, review: Tag) -> str:
         name = review.find('span', itemprop='name')
         if name:
-            review_data['name'] = name.text.strip()
+            return name.text.strip()
+        raise Exception
 
-        rating = review.find('meta', itemprop='ratingValue')
-        review_data['rating'] = int(float(rating['content']))  # type: ignore
+    def _parse_review_rating(self, review: Tag) -> int:
+        rating = review.find(
+            'meta',
+            itemprop='ratingValue',
+        )['content']  # type: ignore
+        return int(float(rating))
 
+    def _parse_review_text(self, review: Tag) -> str:
         review_text = review.find(
             'span',
             class_='spoiler-view__text-container',
         )
         if review_text:
-            review_data['text'] = review_text.text.strip()
+            return review_text.text.strip()
+        raise Exception
 
+    def _parse_review_date(self, review: Tag) -> str:
         date = review.find(
             'span',
             class_='business-review-view__date',
         )
         if date:
-            review_data['date'] = self.convert_date(date.text.strip())
+            return self._convert_date(date.text.strip())
+        raise Exception
 
-        return review_data
-
-    def convert_date(self, date_str: str) -> str:
+    def _convert_date(self, date_str: str) -> str:
         parts = date_str.split()
         if len(parts) == 3:
             day, month_name, year = parts
