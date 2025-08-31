@@ -1,10 +1,10 @@
 [project]
 name = "ymrp"
-version = "0.5.0"
+version = "0.6.0"
 authors = [
     { name = "Miron", email = "berchetov@gmail.com" },
 ]
-description = "Yandex map reviews parser"
+description = "Yandex map resources parser library"
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.12"
