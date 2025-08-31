@@ -44,8 +44,19 @@ class YandexMapProductsAndServicesHtmlCodeParser:
     ) -> list[dict[str, Any]]:
         """
         Parse HTML content containing Yandex Maps products and services.
-        """
 
+        Args:
+            html_content: String containing HTML of products and services.
+
+        Returns:
+            List of dictionaries with parsed products and services data,
+            each containing:
+            - group_name: Category name
+            - title: Product/service title
+            - description: Product/service description
+            - price: Product/service price
+            - image_url: Product/service image URL
+        """
         soup = BeautifulSoup(html_content, 'html.parser')
         products_and_services = []
         category_groups = soup.find_all(
@@ -63,6 +74,15 @@ class YandexMapProductsAndServicesHtmlCodeParser:
         self,
         category_group: Tag,
     ) -> list[dict[str, Any]]:
+        """
+        Parse a category group of products and services.
+
+        Args:
+            category_group: BeautifulSoup Tag object of a category group.
+
+        Returns:
+            List of dictionaries with parsed products/services in the category.
+        """
         category_products_and_services = []
         category_title = category_group.find(
             constants.DIV,
@@ -103,6 +123,15 @@ class YandexMapProductsAndServicesHtmlCodeParser:
         self,
         product_or_service: Tag,
     ) -> str | None:
+        """
+        Extract product or service title from Tag.
+
+        Args:
+            product_or_service: BeautifulSoup Tag object of a product/service.
+
+        Returns:
+            Product/service title as string or None if not found.
+        """
         if isinstance(product_or_service, Tag):
             title_elem = product_or_service.find(
                 constants.DIV,
@@ -116,6 +145,15 @@ class YandexMapProductsAndServicesHtmlCodeParser:
         self,
         product_or_service: Tag,
     ) -> str | None:
+        """
+        Extract product or service description from Tag.
+
+        Args:
+            product_or_service: BeautifulSoup Tag object of a product/service.
+
+        Returns:
+            Product/service description as string or None if not found.
+        """
         desc_elem = product_or_service.find(
             constants.DIV,
             class_=constants.PRODUCT_DESCRIPTION_CLASS,
@@ -128,6 +166,15 @@ class YandexMapProductsAndServicesHtmlCodeParser:
         self,
         product_or_service: Tag,
     ) -> str | None:
+        """
+        Extract product or service price from Tag.
+
+        Args:
+            product_or_service: BeautifulSoup Tag object of a product/service.
+
+        Returns:
+            Product/service price as string or None if not found.
+        """
         price_elem = product_or_service.find(
             constants.SPAN,
             class_=constants.PRODUCT_PRICE_CLASS,
@@ -140,6 +187,15 @@ class YandexMapProductsAndServicesHtmlCodeParser:
         self,
         product_or_service: Tag,
     ) -> Any:
+        """
+        Extract product or service image URL from Tag.
+
+        Args:
+            product_or_service: BeautifulSoup Tag object of a product/service.
+
+        Returns:
+            Product/service image URL as string or None if not found.
+        """
         img_elem = product_or_service.find(
             'img',
             class_=constants.PRODUCT_IMAGE_CLASS,
@@ -156,6 +212,19 @@ class YandexMapProductsAndServicesParser(YandexMapParser):
     """
 
     def get_products_and_services_html_content(self, url: str) -> str:
+        """
+        Retrieve HTML content of products and services from Yandex Maps page.
+
+        Args:
+            url: URL of the Yandex Maps business page.
+
+        Returns:
+            HTML content string of the products and services section.
+
+        Note:
+            Performs browser automation to load all available categories
+            and return the complete HTML content.
+        """
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch(headless=False)
             page = browser.new_page()
@@ -172,6 +241,16 @@ class YandexMapProductsAndServicesParser(YandexMapParser):
             return reviews_container.inner_html()
 
     def _view_all_categories(self, page: Page) -> None:
+        """
+        Scroll through and load all available categories.
+
+        Args:
+            page: Playwright Page object.
+
+        Note:
+            Continuously clicks on the last category until no new categories
+            are loaded to ensure all content is visible.
+        """
         last_category = None
         prev_category_count, category_count = 0, 0
         while True:
@@ -261,7 +340,7 @@ class YandexMapReviewsHtmlCodeParser:
             review: BeautifulSoup Tag object of a review.
 
         Returns:
-            Reviewer's name as string.
+            Reviewer's name as string or None if not found.
 
         Raises:
             Exception: If name element cannot be found.
@@ -298,7 +377,7 @@ class YandexMapReviewsHtmlCodeParser:
             review: BeautifulSoup Tag object of a review.
 
         Returns:
-            Full text content of the review.
+            Full text content of the review or None if not found.
 
         Raises:
             Exception: If review text element cannot be found.
@@ -318,7 +397,7 @@ class YandexMapReviewsHtmlCodeParser:
             review: BeautifulSoup Tag object of a review.
 
         Returns:
-            Date string formatted as YYYY-MM-DD.
+            Date string formatted as YYYY-MM-DD or None if not found.
 
         Raises:
             Exception: If date element cannot be found.
@@ -399,6 +478,10 @@ class YandexMapReviewsParser(YandexMapParser):
 
         Args:
             page: Playwright Page object.
+
+        Note:
+            Continuously clicks on the last review until no new reviews
+            are loaded to ensure all content is visible.
         """
         last_review = None
         prev_review_count, review_count = 0, 0
@@ -440,7 +523,11 @@ class Parser:
     """Main parser class combining HTML scraping and parsing functionality."""
 
     def __init__(self) -> None:
-        """Initialize parser with required components."""
+        """
+        Initialize parser with required components.
+
+        Creates instances of all necessary parser and scraper classes.
+        """
         self.ymrhcp = YandexMapReviewsHtmlCodeParser()
         self.ymrp = YandexMapReviewsParser()
         self.ympashcp = YandexMapProductsAndServicesHtmlCodeParser()
@@ -455,6 +542,11 @@ class Parser:
 
         Returns:
             List of dictionaries containing parsed review data.
+
+        Example:
+            >>> url = 'https://yandex.ru/maps/org/...'
+            >>> parser = Parser()
+            >>> reviews = parser.get_yandex_reviews(url)
         """
         return self.ymrhcp.parse_yandex_reviews(
             html_content=self.ymrp.get_reviews_html_content(url)
@@ -469,6 +561,11 @@ class Parser:
 
         Returns:
             List of dictionaries containing parsed products and services data.
+
+        Example:
+            >>> url = 'https://yandex.ru/maps/org/...'
+            >>> parser = Parser()
+            >>> products = parser.get_yandex_products_and_services(url)
         """
         html_content = self.ympasp.get_products_and_services_html_content(url)
         return self.ympashcp.parse_yandex_products_and_services(html_content)
