@@ -7,6 +7,32 @@ from playwright.sync_api import Locator, Page, sync_playwright
 from . import constants  # noqa: WPS300
 
 
+class YandexMapParser:
+    def _click_on_element(
+        self,
+        element: Locator,
+        button: Literal['left', 'middle', 'right'] = 'left',
+        timeout: int = constants.VERY_SMALL_TIMEOUT,
+    ) -> bool:
+        """
+        Safely click on a Playwright element with error handling.
+
+        Args:
+            element: Playwright Locator object.
+            button: Mouse button to use for click.
+            timeout: Maximum wait time in milliseconds.
+
+        Returns:
+            True if click succeeded, False if failed.
+        """
+        try:
+            element.click(button=button, timeout=timeout)
+        except Exception:
+            return False
+        else:
+            return True
+
+
 class YandexMapProductsAndServicesHtmlCodeParser:
     """
     Parser for extracting products and services data from Yandex Maps.
@@ -124,7 +150,7 @@ class YandexMapProductsAndServicesHtmlCodeParser:
         return None
 
 
-class YandexMapProductsAndServicesParser:
+class YandexMapProductsAndServicesParser(YandexMapParser):
     """
     Scraper for retrieving Yandex Maps products and services using Playwright.
     """
@@ -166,19 +192,6 @@ class YandexMapProductsAndServicesParser:
                 ...
             finally:
                 page.wait_for_timeout(constants.SMALL_TIMEOUT)
-
-    def _click_on_element(
-        self,
-        element: Locator,
-        button: Literal['left', 'middle', 'right'] = 'left',
-        timeout: int = constants.VERY_SMALL_TIMEOUT,
-    ) -> bool:
-        try:
-            element.click(button=button, timeout=timeout)
-        except Exception:
-            return False
-        else:
-            return True
 
 
 class YandexMapReviewsHtmlCodeParser:
@@ -340,7 +353,7 @@ class YandexMapReviewsHtmlCodeParser:
         return f'{year}-{month}-{day.zfill(2)}'
 
 
-class YandexMapReviewsParser:
+class YandexMapReviewsParser(YandexMapParser):
     """Scraper for retrieving Yandex Maps reviews using Playwright."""
 
     def get_reviews_html_content(self, url: str) -> str:
@@ -421,30 +434,6 @@ class YandexMapReviewsParser:
             for button in more_buttons:
                 self._click_on_element(button)
             iterations += 1
-
-    def _click_on_element(
-        self,
-        element: Locator,
-        button: Literal['left', 'middle', 'right'] = 'left',
-        timeout: int = constants.VERY_SMALL_TIMEOUT,
-    ) -> bool:
-        """
-        Safely click on a Playwright element with error handling.
-
-        Args:
-            element: Playwright Locator object.
-            button: Mouse button to use for click.
-            timeout: Maximum wait time in milliseconds.
-
-        Returns:
-            True if click succeeded, False if failed.
-        """
-        try:
-            element.click(button=button, timeout=timeout)
-        except Exception:
-            return False
-        else:
-            return True
 
 
 class Parser:
