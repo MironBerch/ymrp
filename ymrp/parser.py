@@ -24,7 +24,7 @@ class YandexMapProductsAndServicesHtmlCodeParser:
         products_and_services = []
         category_groups = soup.find_all(
             constants.DIV,
-            class_='business-full-items-grouped-view__category',
+            class_=constants.CATEGORY_GROUP,
         )
         for category_group in category_groups:
             if isinstance(category_group, Tag):
@@ -40,7 +40,7 @@ class YandexMapProductsAndServicesHtmlCodeParser:
         category_products_and_services = []
         category_title = category_group.find(
             constants.DIV,
-            class_='business-full-items-grouped-view__title',
+            class_=constants.CATEGORY_TITLE,
         )
         group_name = (
             category_title.get_text(strip=True)
@@ -49,7 +49,7 @@ class YandexMapProductsAndServicesHtmlCodeParser:
         )
         category_group_items = category_group.find_all(
             constants.DIV,
-            class_='business-full-items-grouped-view__item',
+            class_=constants.CATEGORY_GROUP_ITEM,
         )
         for category_group_item in category_group_items:
             if isinstance(category_group_item, Tag):
@@ -207,7 +207,7 @@ class YandexMapReviewsHtmlCodeParser:
         soup = BeautifulSoup(html_content, 'html.parser')
         review_cards = soup.find_all(
             constants.DIV,
-            class_='business-reviews-card-view__review',
+            class_=constants.REVIEW_CLASS,
         )
         reviews: list[dict[str, Any]] = []
         for review in review_cards:
@@ -292,7 +292,7 @@ class YandexMapReviewsHtmlCodeParser:
         """
         review_text = review.find(
             constants.SPAN,
-            class_='spoiler-view__text-container',
+            class_=constants.REVIEW_TEXT_CLASS,
         )
         if review_text:
             return str(review_text.text.strip())
@@ -312,7 +312,7 @@ class YandexMapReviewsHtmlCodeParser:
         """
         date = review.find(
             constants.SPAN,
-            class_='business-review-view__date',
+            class_=constants.REVIEW_DATE_CLASS,
         )
         if date:
             return self._convert_date(date.text.strip())
