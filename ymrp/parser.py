@@ -241,7 +241,7 @@ class YandexMapReviewsHtmlCodeParser:
             'date': self._parse_review_date(review),
         }
 
-    def _parse_review_name(self, review: Tag) -> str:
+    def _parse_review_name(self, review: Tag) -> str | None:
         """Extract reviewer name from review Tag.
 
         Args:
@@ -256,7 +256,7 @@ class YandexMapReviewsHtmlCodeParser:
         name = review.find(constants.SPAN, itemprop='name')
         if name:
             return str(name.text.strip())
-        raise Exception("Could not parse reviewer name")
+        return None
 
     def _parse_review_rating(self, review: Tag) -> int:
         """Extract numerical rating from review Tag.
@@ -278,7 +278,7 @@ class YandexMapReviewsHtmlCodeParser:
         ]  # type: ignore
         return int(float(rating))
 
-    def _parse_review_text(self, review: Tag) -> str:
+    def _parse_review_text(self, review: Tag) -> str | None:
         """Extract review text content from review Tag.
 
         Args:
@@ -296,9 +296,9 @@ class YandexMapReviewsHtmlCodeParser:
         )
         if review_text:
             return str(review_text.text.strip())
-        raise Exception("Could not parse review text")
+        return None
 
-    def _parse_review_date(self, review: Tag) -> str:
+    def _parse_review_date(self, review: Tag) -> str | None:
         """Extract and format review date from review Tag.
 
         Args:
@@ -316,7 +316,7 @@ class YandexMapReviewsHtmlCodeParser:
         )
         if date:
             return self._convert_date(date.text.strip())
-        raise Exception("Could not parse review date")
+        return None
 
     def _convert_date(self, date_str: str) -> str:
         """Convert Russian date string to ISO format (YYYY-MM-DD).
