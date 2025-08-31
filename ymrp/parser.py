@@ -4,16 +4,181 @@ from typing import Any, Literal
 from bs4 import BeautifulSoup, Tag
 from playwright.sync_api import Locator, Page, sync_playwright
 
-from .constants import (  # noqa: WPS300
-    BIG_TIMEOUT,
-    MEDIUM_TIMEOUT,
-    REVIEW,
-    REVIEW_VIEW_EXPAND,
-    REVIEWS_CONTAINER,
-    SMALL_TIMEOUT,
-    VERY_SMALL_TIMEOUT,
-    months,
-)
+from . import constants  # noqa: WPS300
+
+
+class YandexMapProductsAndServicesHtmlCodeParser:
+    """
+    Parser for extracting products and services data from Yandex Maps.
+    """
+
+    def parse_yandex_products_and_services(
+        self,
+        html_content: str = '',
+    ) -> list[dict[str, Any]]:
+        """
+        Parse HTML content containing Yandex Maps products and services.
+        """
+
+        soup = BeautifulSoup(html_content, 'html.parser')
+        products_and_services = []
+        category_groups = soup.find_all(
+            constants.DIV,
+            class_='business-full-items-grouped-view__category',
+        )
+        for category_group in category_groups:
+            if isinstance(category_group, Tag):
+                products_and_services.extend(
+                    self._parse_category_group(category_group),
+                )
+        return products_and_services
+
+    def _parse_category_group(
+        self,
+        category_group: Tag,
+    ) -> list[dict[str, Any]]:
+        category_products_and_services = []
+        category_title = category_group.find(
+            constants.DIV,
+            class_='business-full-items-grouped-view__title',
+        )
+        group_name = (
+            category_title.get_text(strip=True)
+            if category_title
+            else 'Без категории'
+        )
+        category_group_items = category_group.find_all(
+            constants.DIV,
+            class_='business-full-items-grouped-view__item',
+        )
+        for category_group_item in category_group_items:
+            if isinstance(category_group_item, Tag):
+                category_products_and_services.append(
+                    {
+                        'group_name': group_name,
+                        'title': self._parse_product_or_service_title(
+                            product_or_service=category_group_item,
+                        ),
+                        'description':
+                        self._parse_product_or_service_description(
+                            product_or_service=category_group_item,
+                        ),
+                        'price': self._parse_product_or_service_price(
+                            product_or_service=category_group_item,
+                        ),
+                        'image_url': self._parse_product_or_service_image(
+                            product_or_service=category_group_item,
+                        ),
+                    }
+                )
+        return category_products_and_services
+
+    def _parse_product_or_service_title(
+        self,
+        product_or_service: Tag,
+    ) -> str | None:
+        if isinstance(product_or_service, Tag):
+            title_elem = product_or_service.find(
+                constants.DIV,
+                class_=constants.PRODUCT_TITLE_CLASS,
+            )
+            if title_elem:
+                return title_elem.get_text(strip=True)
+        return None
+
+    def _parse_product_or_service_description(
+        self,
+        product_or_service: Tag,
+    ) -> str | None:
+        desc_elem = product_or_service.find(
+            constants.DIV,
+            class_=constants.PRODUCT_DESCRIPTION_CLASS,
+        )
+        if desc_elem:
+            return desc_elem.get_text(strip=True)
+        return None
+
+    def _parse_product_or_service_price(
+        self,
+        product_or_service: Tag,
+    ) -> str | None:
+        price_elem = product_or_service.find(
+            constants.SPAN,
+            class_=constants.PRODUCT_PRICE_CLASS,
+        )
+        if price_elem:
+            return price_elem.get_text(strip=True)
+        return None
+
+    def _parse_product_or_service_image(
+        self,
+        product_or_service: Tag,
+    ) -> Any:
+        img_elem = product_or_service.find(
+            'img',
+            class_=constants.PRODUCT_IMAGE_CLASS,
+        )
+        if isinstance(img_elem, Tag):
+            if img_elem and img_elem.get('src'):
+                return img_elem['src']
+        return None
+
+
+class YandexMapProductsAndServicesParser:
+    """
+    Scraper for retrieving Yandex Maps products and services using Playwright.
+    """
+
+    def get_products_and_services_html_content(self, url: str) -> str:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(headless=False)
+            page = browser.new_page()
+            page.goto(url)
+            page.wait_for_selector(
+                constants.CATEGORIES_CONTAINER,
+                timeout=constants.BIG_TIMEOUT,
+                state='visible',
+            )
+            page.wait_for_timeout(constants.SMALL_TIMEOUT)
+            self._view_all_categories(page)
+            page.wait_for_timeout(constants.SMALL_TIMEOUT)
+            reviews_container = page.locator(constants.CATEGORIES_CONTAINER)
+            return reviews_container.inner_html()
+
+    def _view_all_categories(self, page: Page) -> None:
+        last_category = None
+        prev_category_count, category_count = 0, 0
+        while True:
+            page.wait_for_timeout(constants.MEDIUM_TIMEOUT)
+            last_category = page.locator(constants.CATEGORY)
+            category_count = last_category.count()
+            last_category = last_category.last
+            self._click_on_element(last_category)
+            if prev_category_count == category_count:
+                break
+            prev_category_count = category_count
+        page.wait_for_timeout(constants.MEDIUM_TIMEOUT)
+        categories = page.locator(constants.CATEGORY)
+        for index in range(categories.count()):
+            try:
+                categories.nth(index).scroll_into_view_if_needed()
+            except Exception:
+                ...
+            finally:
+                page.wait_for_timeout(constants.SMALL_TIMEOUT)
+
+    def _click_on_element(
+        self,
+        element: Locator,
+        button: Literal['left', 'middle', 'right'] = 'left',
+        timeout: int = constants.VERY_SMALL_TIMEOUT,
+    ) -> bool:
+        try:
+            element.click(button=button, timeout=timeout)
+        except Exception:
+            return False
+        else:
+            return True
 
 
 class YandexMapReviewsHtmlCodeParser:
@@ -41,7 +206,7 @@ class YandexMapReviewsHtmlCodeParser:
         """
         soup = BeautifulSoup(html_content, 'html.parser')
         review_cards = soup.find_all(
-            'div',
+            constants.DIV,
             class_='business-reviews-card-view__review',
         )
         reviews: list[dict[str, Any]] = []
@@ -88,9 +253,9 @@ class YandexMapReviewsHtmlCodeParser:
         Raises:
             Exception: If name element cannot be found.
         """
-        name = review.find('span', itemprop='name')
+        name = review.find(constants.SPAN, itemprop='name')
         if name:
-            return name.text.strip()
+            return str(name.text.strip())
         raise Exception("Could not parse reviewer name")
 
     def _parse_review_rating(self, review: Tag) -> int:
@@ -126,11 +291,11 @@ class YandexMapReviewsHtmlCodeParser:
             Exception: If review text element cannot be found.
         """
         review_text = review.find(
-            'span',
+            constants.SPAN,
             class_='spoiler-view__text-container',
         )
         if review_text:
-            return review_text.text.strip()
+            return str(review_text.text.strip())
         raise Exception("Could not parse review text")
 
     def _parse_review_date(self, review: Tag) -> str:
@@ -146,7 +311,7 @@ class YandexMapReviewsHtmlCodeParser:
             Exception: If date element cannot be found.
         """
         date = review.find(
-            'span',
+            constants.SPAN,
             class_='business-review-view__date',
         )
         if date:
@@ -171,7 +336,7 @@ class YandexMapReviewsHtmlCodeParser:
         else:
             day, month_name = parts
             year = str(datetime.now().year)
-        month = months.get(month_name, '01')
+        month = constants.months.get(month_name, '01')
         return f'{year}-{month}-{day.zfill(2)}'
 
 
@@ -195,14 +360,14 @@ class YandexMapReviewsParser:
             3. Return the complete HTML
         """
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=True)
+            browser = playwright.chromium.launch(headless=False)
             page = browser.new_page()
             page.goto(url)
 
-            reviews_container = page.locator(REVIEWS_CONTAINER)
+            reviews_container = page.locator(constants.REVIEWS_CONTAINER)
             page.wait_for_selector(
-                REVIEWS_CONTAINER,
-                timeout=BIG_TIMEOUT,
+                constants.REVIEWS_CONTAINER,
+                timeout=constants.BIG_TIMEOUT,
                 state='visible',
             )
 
@@ -210,9 +375,9 @@ class YandexMapReviewsParser:
             self._view_all_reviews(page)
             self._expand_all_reviews(page)
 
-            page.wait_for_timeout(SMALL_TIMEOUT)
+            page.wait_for_timeout(constants.SMALL_TIMEOUT)
 
-            reviews_container = page.locator(REVIEWS_CONTAINER)
+            reviews_container = page.locator(constants.REVIEWS_CONTAINER)
             return reviews_container.inner_html()
 
     def _view_all_reviews(self, page: Page) -> None:
@@ -226,9 +391,9 @@ class YandexMapReviewsParser:
         prev_review_count, review_count = 0, 0
 
         while True:
-            page.wait_for_timeout(MEDIUM_TIMEOUT)
+            page.wait_for_timeout(constants.MEDIUM_TIMEOUT)
 
-            last_review = page.locator(REVIEW)
+            last_review = page.locator(constants.REVIEW)
             review_count = last_review.count()
             last_review = last_review.last
 
@@ -249,10 +414,10 @@ class YandexMapReviewsParser:
         Note:
             Makes multiple attempts to ensure all expand buttons are clicked.
         """
-        more_buttons = page.locator(REVIEW_VIEW_EXPAND).all()
+        more_buttons = page.locator(constants.REVIEW_VIEW_EXPAND).all()
         iterations = 0
         while iterations < 10 or len(more_buttons) != 0:
-            more_buttons = page.locator(REVIEW_VIEW_EXPAND).all()
+            more_buttons = page.locator(constants.REVIEW_VIEW_EXPAND).all()
             for button in more_buttons:
                 self._click_on_element(button)
             iterations += 1
@@ -261,7 +426,7 @@ class YandexMapReviewsParser:
         self,
         element: Locator,
         button: Literal['left', 'middle', 'right'] = 'left',
-        timeout: int = VERY_SMALL_TIMEOUT,
+        timeout: int = constants.VERY_SMALL_TIMEOUT,
     ) -> bool:
         """
         Safely click on a Playwright element with error handling.
@@ -289,6 +454,8 @@ class Parser:
         """Initialize parser with required components."""
         self.ymrhcp = YandexMapReviewsHtmlCodeParser()
         self.ymrp = YandexMapReviewsParser()
+        self.ympashcp = YandexMapProductsAndServicesHtmlCodeParser()
+        self.ympasp = YandexMapProductsAndServicesParser()
 
     def get_yandex_reviews(self, url: str) -> list[dict[str, Any]]:
         """
@@ -303,3 +470,16 @@ class Parser:
         return self.ymrhcp.parse_yandex_reviews(
             html_content=self.ymrp.get_reviews_html_content(url)
         )
+
+    def get_yandex_products_and_services(self, url: str) -> Any:
+        """
+        Get parsed products and services from Yandex Maps URL.
+
+        Args:
+            url: URL of the Yandex Maps business page.
+
+        Returns:
+            List of dictionaries containing parsed products and services data.
+        """
+        html_content = self.ympasp.get_products_and_services_html_content(url)
+        return self.ympashcp.parse_yandex_products_and_services(html_content)
