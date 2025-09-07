@@ -53,3 +53,5 @@ for product_or_service in products_and_services:
     print(product_or_service)
 
 ```
+
+Note: images size can be S, M, L, XL and XXL.
